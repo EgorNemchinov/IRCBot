@@ -8,7 +8,7 @@ class IRCBot:
 
     BYTES_TO_READ = 2048
 
-    def __init__(self, channel='channel', nick='Mcconaughey'):
+    def __init__(self, channel, nick):
         self.irc_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.irc_socket.connect((HOST, PORT))
 
@@ -16,22 +16,19 @@ class IRCBot:
         self.channel = '#' + channel.replace('#', '')
         self.running = False
         self.buffer = ''
-
-        self.send_msg(f'USER {NICK} {NICK} {NICK}: {NICK}')
-        self.send_msg(f'NICK {NICK}')
-        self.priv_msg(NICK, 'nickserv')
+        print(f'Create IRCBot with channel={channel}, nickname={nick}')
+        self.send_msg(f'USER {self.nickname} {self.nickname} {self.nickname}: {self.nickname}')
+        self.send_msg(f'NICK {self.nickname}')
         for line in self.read_lines():
             self.check_ping(line)
-        self.send_msg(f'JOIN #{channel}')
+        self.send_msg(f'JOIN #{self.channel}')
         self.priv_msg('Alright, alright, alright')
-        self.read_lines()
-        self.run()
-        pass
 
     def send_msg(self, msg):
         self.irc_socket.send(bytes('%s\r\n' % msg, 'UTF-8'))
 
-    def priv_msg(self, msg, receiver='#channel'):
+    def priv_msg(self, msg, receiver=None):
+        receiver = receiver if receiver is not None else self.channel
         return self.send_msg('PRIVMSG %s : %s' % (receiver, msg))
 
     def read_lines(self):
@@ -65,4 +62,14 @@ class IRCBot:
 
     def log(self, line):
         print(line)
-    
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    arg = parser.add_argument
+
+    arg('channel', type=str)
+    arg('nickname', type=str, default='Mcconaughey')
+    args = parser.parse_args()
+
+    bot = IRCBot(args.channel, args.nickname)
+    bot.run()
