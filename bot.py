@@ -8,21 +8,22 @@ class IRCBot:
 
     BYTES_TO_READ = 1024
 
-    def __init__(self, channel, nick):
+    def __init__(self, channel, nick, init_message=None, quit_message=None):
         self.irc_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.irc_socket.connect((HOST, PORT))
 
         self.nickname = nick
         self.channel = '#' + channel.replace('#', '')
         self.running = False
-        self.buffer = ''
-        print(f'Create IRCBot with channel={channel}, nickname={nick}')
+        self.quit_message = quit_message
+
         self.send_msg(f'USER {self.nickname} {self.nickname} {self.nickname}: {self.nickname}')
         self.send_msg(f'NICK {self.nickname}')
         for line in self.read_lines():
             self.check_ping(line)
         self.send_msg(f'JOIN {self.channel}')
-        self.priv_msg('Alright, alright, alright')
+        if init_message is not None:
+            self.priv_msg(init_message)
 
     def send_msg(self, msg):
         self.irc_socket.send(bytes('%s\r\n' % msg, 'UTF-8'))
@@ -42,6 +43,16 @@ class IRCBot:
             return True
         return False
 
+    def _process_line(self, line):
+        words = str.rstrip(line).split()
+
+        if ' PRIVMSG ' in line:
+            index = words.index('PRIVMSG')
+            receiver = words[index + 1]
+            sender = words[0][1:words[0].find('!')]
+            rest = ' '.join(words[index + 2 :])
+            self.priv_msg(f'{sender} to {receiver}: {rest}')
+
     def run(self):
         print('Running in a loop')
         self.running = True
@@ -50,14 +61,7 @@ class IRCBot:
                 lines = self.read_lines()
                 for line in lines:
                     self.check_ping(line)
-                    words = str.rstrip(line).split()
-
-                    if ' PRIVMSG ' in line:
-                        index = words.index('PRIVMSG')
-                        receiver = words[index + 1]
-                        sender = words[0][:words[0].find('!')]
-                        rest = ' '.join(words[index + 2 :])
-                        self.priv_msg(f'{sender} to {receiver}: {rest}')
+                    self._process_line(line)
         except KeyboardInterrupt:
             self.log('Bot is cancelled, stopping..')
             self.stop()
@@ -68,8 +72,8 @@ class IRCBot:
 
     def stop(self):
         self.running = False
-        self.priv_msg('Was nice meeting ya. Bye, fellas!')
-        self.send_msg('QUIT : Bye y\'all')
+        self.priv_msg(self.quit_message)
+        self.send_msg('QUIT : Bye')
 
     def log(self, line):
         print(line)
