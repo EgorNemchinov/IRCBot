@@ -6,7 +6,7 @@ PORT = 6667
 
 class IRCBot:
 
-    BYTES_TO_READ = 2048
+    BYTES_TO_READ = 1024
 
     def __init__(self, channel, nick):
         self.irc_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -21,7 +21,7 @@ class IRCBot:
         self.send_msg(f'NICK {self.nickname}')
         for line in self.read_lines():
             self.check_ping(line)
-        self.send_msg(f'JOIN #{self.channel}')
+        self.send_msg(f'JOIN {self.channel}')
         self.priv_msg('Alright, alright, alright')
 
     def send_msg(self, msg):
@@ -34,7 +34,7 @@ class IRCBot:
     def read_lines(self):
         buffer = self.irc_socket.recv(self.BYTES_TO_READ).decode('UTF-8')
         self.log(buffer)
-        return str.split('\n')
+        return buffer.split('\n')
 
     def check_ping(self, line):
         if 'PING' in line:
@@ -45,15 +45,19 @@ class IRCBot:
     def run(self):
         print('Running in a loop')
         self.running = True
-        try:
-            while self.running:
-                lines = self.read_lines()
-                for line in lines:
-                    self.check_ping(line)
+        while self.running:
+            lines = self.read_lines()
+            for line in lines:
+                self.check_ping(line)
+                words = str.rstrip(line).split()
 
-                    words = str.rstrip(line).split()
-        except:
-            self.stop()
+                if ' PRIVMSG ' in line:
+                    index = words.index('PRIVMSG')
+                    receiver = words[index + 1]
+                    sender = words[0][:words[0].find('!')]
+                    rest = ' '.join(words[index + 2 :])
+                    self.priv_msg(f'{sender} to {receiver}: {rest}')
+
 
     def stop(self):
         self.running = False
