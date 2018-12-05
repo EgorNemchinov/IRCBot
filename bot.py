@@ -45,19 +45,26 @@ class IRCBot:
     def run(self):
         print('Running in a loop')
         self.running = True
-        while self.running:
-            lines = self.read_lines()
-            for line in lines:
-                self.check_ping(line)
-                words = str.rstrip(line).split()
+        try:
+            while self.running:
+                lines = self.read_lines()
+                for line in lines:
+                    self.check_ping(line)
+                    words = str.rstrip(line).split()
 
-                if ' PRIVMSG ' in line:
-                    index = words.index('PRIVMSG')
-                    receiver = words[index + 1]
-                    sender = words[0][:words[0].find('!')]
-                    rest = ' '.join(words[index + 2 :])
-                    self.priv_msg(f'{sender} to {receiver}: {rest}')
-
+                    if ' PRIVMSG ' in line:
+                        index = words.index('PRIVMSG')
+                        receiver = words[index + 1]
+                        sender = words[0][:words[0].find('!')]
+                        rest = ' '.join(words[index + 2 :])
+                        self.priv_msg(f'{sender} to {receiver}: {rest}')
+        except KeyboardInterrupt:
+            self.log('Bot is cancelled, stopping..')
+            self.stop()
+        except Exception as error:
+            print('Caught an exception', error)
+            self.stop()
+            raise
 
     def stop(self):
         self.running = False
