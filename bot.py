@@ -54,7 +54,7 @@ class IRCBot:
             self.priv_msg(f'{sender} to {receiver}: {rest}')
 
     def run(self):
-        print('Running in a loop')
+        self.log('Running in a loop')
         self.running = True
         try:
             while self.running:
@@ -66,14 +66,14 @@ class IRCBot:
             self.log('Bot is cancelled, stopping..')
             self.stop()
         except Exception as error:
-            print('Caught an exception', error)
+            self.log(f'Caught an exception {error}')
             self.stop()
             raise
 
     def stop(self):
         self.running = False
         self.priv_msg(self.quit_message)
-        self.send_msg('QUIT : Bye')
+        self.send_msg('QUIT : -')
 
     def log(self, line):
         print(line)

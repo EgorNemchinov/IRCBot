@@ -2,7 +2,7 @@ import argparse
 import urllib3
 from bot import IRCBot
 
-NAME = 'Jonathan'
+NAME = 'JonathanSunny'
 INIT_MESSAGE = 'Hello! If you would like to find out weather in certain town, write "weather <city>"'
 QUIT_MESSAGE = 'Thank you for using our service.'
 
@@ -19,16 +19,17 @@ class WeatherBot(IRCBot):
             receiver = words[index + 1]
             rest = ' '.join(words[index + 2 :])
             if 'weather' in line:
+                print(words[index + 2])
                 city = '-'.join(words[index + 3:])
                 self.log(f'Trying to fetch weather for {city}')
-                weather_forecast = self.fetch_weather(city)
+                weather_forecast = self._fetch_weather(city)
                 if weather_forecast == None:
                     self.priv_msg('Haven\'t found weather for city', city)
                 else:
-                    self.priv_msg(f'Weather (0-3 days) in town {city} is:')
+                    self.priv_msg(f'Weather for 0-3 days in town {city} is:')
                     self.priv_msg(weather_forecast)
 
-    def fetch_weather(self, city):
+    def _fetch_weather(self, city):
         BEGIN_STR = '<p class="b-forecast__table-description-content"><span class="phrase">'
         END_STR = '</span></p>'
         url = f'https://www.weather-forecast.com/locations/{city}/forecasts/latest'
