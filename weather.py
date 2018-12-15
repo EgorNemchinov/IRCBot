@@ -1,10 +1,13 @@
 import argparse
 import urllib3
 from bot import IRCBot
+from random import randint
 
 NAME = 'JonathanSunny'
 INIT_MESSAGE = 'Hello! If you would like to find out weather in certain town, write "weather <city>"'
 QUIT_MESSAGE = 'Thank you for using our service.'
+CITIES = ['London', 'Saint-Petersburg', 'Moscow', 'Chelyabinsk', 'Omsk',
+          'Kazan', 'San-Francisco', 'New-York', 'Berlin']
 
 class WeatherBot(IRCBot):
     def __init__(self, channel):
@@ -22,6 +25,14 @@ class WeatherBot(IRCBot):
                 print(words[index + 2])
                 city = '-'.join(words[index + 3:])
                 self.log(f'Trying to fetch weather for {city}')
+                weather_forecast = self._fetch_weather(city)
+                if weather_forecast == None:
+                    self.priv_msg('Haven\'t found weather for city', city)
+                else:
+                    self.priv_msg(f'Weather for 0-3 days in town {city} is:')
+                    self.priv_msg(weather_forecast)
+            if NAME in line and 'do some magic' in line:
+                city = CITIES[randint(0, len(CITIES) - 1)]
                 weather_forecast = self._fetch_weather(city)
                 if weather_forecast == None:
                     self.priv_msg('Haven\'t found weather for city', city)
